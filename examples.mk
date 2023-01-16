@@ -26,6 +26,7 @@ $(SRC_DIR)/RVmodel.cpp \
 $(SRC_DIR)/RVFWHMmodel.cpp \
 $(SRC_DIR)/ConditionalPrior_2.cpp \
 $(SRC_DIR)/RV_binaries_model.cpp \
+$(SRC_DIR)/ETmodel.cpp \
 kima_setup.cpp
 
 KIMA_OBJS = $(subst .cpp,.o,$(KIMA_SRCS))

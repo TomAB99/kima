@@ -23,10 +23,11 @@ $(SRCDIR)/Data.cpp \
 $(SRCDIR)/kepler.cpp \
 $(SRCDIR)/AMDstability.cpp \
 $(SRCDIR)/ConditionalPrior.cpp \
+$(SRCDIR)/ConditionalPrior_2.cpp \
 $(SRCDIR)/RVmodel.cpp \
 $(SRCDIR)/RVFWHMmodel.cpp \
-$(SRCDIR)/ConditionalPrior_2.cpp \
 $(SRCDIR)/RV_binaries_model.cpp \
+$(SRCDIR)/ETmodel.cpp \
 $(SRCDIR)/main.cpp
 
 OBJS=$(subst .cpp,.o,$(SRCS))

@@ -677,3 +677,91 @@ vector<string> glob(const string& pattern)
 
     return filenames;
 }
+
+/*******************************************************************************
+ * 
+ * ETData class
+ * 
+ ******************************************************************************/
+
+ETData ETData::ETinstance;
+ETData::ETData() {}
+
+
+
+/**
+ * @brief Load ET data from a file.
+ *
+ * Read a tab/space separated file with columns
+ * ```
+ *   epoch  eclipse_time(ET)  ET_error  quant  error
+ *   ...   ...   ...    ...    ...
+ * ```
+ *
+ * @param filename   the name of the file
+ * @param skip       number of lines to skip in the beginning of the file
+ * (default = 2)
+ */
+void ETData::load(const string filename, int skip)
+{
+    data_t data;
+
+    // Empty the vectors
+    epochs.clear();
+    et.clear();
+    etsig.clear();
+    y2.clear();
+    sig2.clear();
+
+    // Read the file into the data container
+    ifstream infile(filename);
+    infile >> data;
+
+    // Complain if something went wrong.
+    if (!infile.eof()) {
+        printf("Could not read data file (%s)!\n", filename.c_str());
+        exit(1);
+    }
+    if (data.size() - skip == 0) {
+        printf("Data file (%s) seems to be empty!\n", filename.c_str());
+        exit(1);
+    }
+
+    if (skip < 0) skip = 0;
+
+    // number of "columns" of data
+    int ncol = data[skip].size();
+    if (ncol < 3) {
+        printf("Data file (%s) contains less than 3 columns!\n",
+               filename.c_str());
+        exit(1);
+    }
+
+    infile.close();
+
+    datafile = filename;
+    dataskip = skip;
+
+    for (size_t n = 0; n < data.size(); n++) {
+        if (n < skip) continue;
+        epochs.push_back(data[n][0]);
+        et.push_back(data[n][1]);
+        etsig.push_back(data[n][2]);
+        if (ncol > 3) {
+            y2.push_back(data[n][3]);
+            sig2.push_back(data[n][4]);
+        }
+    }
+
+    // epoch for the mean anomaly, by default the time of the first observation
+    M0_epoch = et[0];
+    // Alternatively use the barycentre of Datapoints
+    //M0_epoch = std::accumulate(et.begin(),et.end(),0.0)/et.size();
+
+#if VERBOSE
+    // How many points did we read?
+    printf("# Loaded %zu data points from file %s\n", epochs.size(),
+           filename.c_str());
+
+#endif
+}
