@@ -135,7 +135,7 @@ void ETmodel::calculate_mu()
             Tp = data.M0_epoch - (P * phi) / (2. * M_PI);
             f = nijenhuis::true_anomaly(ti, P, ecc, Tp);
             // f = brandt::true_anomaly(ti, P, ecc, Tp);
-            tau = K * ((1-pow(ecc,2.))/(1+ecc*cos(f)) * sin(f + omega) + ecc * cos(omega))/(pow(1 - pow(ecc*cos(omega),2.0),0.5));
+            tau = K/(24*3600) * ((1-pow(ecc,2.))/(1+ecc*cos(f)) * sin(f + omega) + ecc * cos(omega))/(pow(1 - pow(ecc*cos(omega),2.0),0.5));
             mu[i] += tau;
         }
     }
@@ -161,7 +161,7 @@ void ETmodel::remove_known_object()
             ti = data.M0_epoch + epochs[i]*ephem1;
             Tp = data.M0_epoch-(KO_P[j]*KO_phi[j])/(2.*M_PI);
             f = nijenhuis::true_anomaly(ti, KO_P[j], KO_e[j], Tp);
-            tau = KO_K[j] * ((1-pow(KO_e[j],2.))/(1+KO_e[j]*cos(f)) * sin(f + KO_w[j]) + KO_e[j] * cos(KO_w[j]))/(pow(1 - pow(KO_e[j]*cos(KO_w[j]),2.0),0.5));
+            tau = KO_K[j]/(24*3600) * ((1-pow(KO_e[j],2.))/(1+KO_e[j]*cos(f)) * sin(f + KO_w[j]) + KO_e[j] * cos(KO_w[j]))/(pow(1 - pow(KO_e[j]*cos(KO_w[j]),2.0),0.5));
             mu[i] -= tau;
         }
     }
@@ -180,7 +180,7 @@ void ETmodel::add_known_object()
             ti = data.M0_epoch + epochs[i]*ephem1;
             Tp = data.M0_epoch-(KO_P[j]*KO_phi[j])/(2.*M_PI);
             f = nijenhuis::true_anomaly(ti, KO_P[j], KO_e[j], Tp);
-            tau = KO_K[j] * ((1-pow(KO_e[j],2.))/(1+KO_e[j]*cos(f)) * sin(f + KO_w[j]) + KO_e[j] * cos(KO_w[j]))/(pow(1 - pow(KO_e[j]*cos(KO_w[j]),2.0),0.5));
+            tau = KO_K[j]/(24*3600) * ((1-pow(KO_e[j],2.))/(1+KO_e[j]*cos(f)) * sin(f + KO_w[j]) + KO_e[j] * cos(KO_w[j]))/(pow(1 - pow(KO_e[j]*cos(KO_w[j]),2.0),0.5));
             mu[i] += tau;
         }
     }
