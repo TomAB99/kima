@@ -42,6 +42,7 @@ class ETmodel
 
         double ephem1, ephem2=0.0, ephem3=0.0;
         double nu;
+        double extra_sigma;
 
         // Parameters for the known object, if set
         // double KO_P, KO_K, KO_e, KO_phi, KO_w;
@@ -73,7 +74,9 @@ class ETmodel
         void initialise() {};
 
         // priors for parameters *not* belonging to the planets
-
+        // Prior for the extra white noise (jitter).
+        std::shared_ptr<DNest4::ContinuousDistribution> Jprior;
+        
         // priors for KO mode!
         std::vector<std::shared_ptr<DNest4::ContinuousDistribution>> KO_Pprior {(size_t) n_known_object};
         std::vector<std::shared_ptr<DNest4::ContinuousDistribution>> KO_Kprior {(size_t) n_known_object};

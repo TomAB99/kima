@@ -15,14 +15,18 @@ void ETmodel::setPriors()  // BUG: should be done by only one thread!
 {
     auto data = get_data();
     
-    if (ephemeris >= 3)
-        throw std::logic_error("can't go higher than quadratic ephemeris ");
+     if (!Jprior)
+        Jprior = make_prior<ModifiedLogUniform>(0.1,100.);
+    
+    if (ephemeris >= 4)
+        throw std::logic_error("can't go higher than cubic ephemeris ");
     if (ephemeris < 1)
         throw std::logic_error("ephemeris should be at least one since eclipse needs a period");
-    if (ephemeris >= 1 && !ephem1_prior)
+    if (ephemeris >= 1 && !ephem1_prior){
         //ephem1_prior = make_prior<Gaussian>(0.0,10.);
         ephem1_prior =  make_prior<LogUniform>(0.0001,1000);
-        printf("# No prior on Binary period speecified, taken as LogUniform over 0.0001-10000\n");
+        printf("# No prior on Binary period specified, taken as LogUniform over 0.0001-1000\n");
+    }
     if (ephemeris >= 2 && !ephem2_prior)
         ephem2_prior = make_prior<Gaussian>(0.0,pow(10,-10.));
     if (ephemeris >= 3 && !ephem3_prior)
@@ -49,6 +53,9 @@ void ETmodel::from_prior(RNG& rng)
 
     planets.from_prior(rng);
     planets.consolidate_diff();
+    
+    extra_sigma = Jprior->generate(rng);
+    
 
     auto data = get_data();
     
@@ -104,7 +111,13 @@ void ETmodel::calculate_mu()
     if(!update) // not updating, means recalculate everything
     {
         mu.assign(mu.size(), data.M0_epoch);
+        
         staleness = 0;
+        
+        for(size_t i=0; i<mu.size(); i++)
+        {
+            mu[i] += ephem1*epochs[i]+ 0.5*ephem2*ephem1*pow(epochs[i],2.0) + ephem3*pow(ephem1,2.0)*pow(epochs[i],3.0)/6.0;
+        }
 
         if (known_object) { // KO mode!
             add_known_object();
@@ -216,7 +229,9 @@ double ETmodel::perturb(RNG& rng)
     }
     else if(rng.rand() <= 0.5) // perturb jitter(s) + known_object
     {
-
+        
+        Jprior->perturb(extra_sigma, rng);
+        
         if (studentt)
             nu_prior->perturb(nu, rng);
 
@@ -242,7 +257,7 @@ double ETmodel::perturb(RNG& rng)
         //subtract ephemeris
         for(size_t i=0; i<mu.size(); i++)
         {
-            mu[i] -= data.M0_epoch + ephem1*epochs[i] + 0.5*ephem2*ephem1*pow(epochs[i],2.0) + ephem3*pow(ephem1,2.0)*pow(epochs[i],3.0)/6.0;
+            mu[i] -= data.M0_epoch + ephem1*epochs[i]+ 0.5*ephem2*ephem1*pow(epochs[i],2.0) + ephem3*pow(ephem1,2.0)*pow(epochs[i],3.0)/6.0;
         }
         
         // propose new ephemeris
@@ -253,7 +268,7 @@ double ETmodel::perturb(RNG& rng)
         //add ephemeris back in
         for(size_t i=0; i<mu.size(); i++)
         {
-            mu[i] += data.M0_epoch + ephem1*epochs[i] + 0.5*ephem2*ephem1*pow(epochs[i],2.0) + ephem3*pow(ephem1,2.0)*pow(epochs[i],3.0)/6.0;
+            mu[i] += data.M0_epoch + ephem1*epochs[i]+ 0.5*ephem2*ephem1*pow(epochs[i],2.0) + ephem3*pow(ephem1,2.0)*pow(epochs[i],3.0)/6.0;
         }
     }
 
@@ -292,6 +307,8 @@ double ETmodel::log_likelihood() const
     #if TIMING
     auto begin = std::chrono::high_resolution_clock::now();  // start timing
     #endif
+    
+    double jit = extra_sigma/(24*3600);
 
     if (studentt){
         // The following code calculates the log likelihood 
@@ -299,7 +316,7 @@ double ETmodel::log_likelihood() const
         double var;
         for(size_t i=0; i<N; i++)
         {
-            var = etsig[i]*etsig[i];
+            var = etsig[i]*etsig[i] +jit*jit;
 
             logL += std::lgamma(0.5*(nu + 1.)) - std::lgamma(0.5*nu)
                     - 0.5*log(M_PI*nu) - 0.5*log(var)
@@ -314,7 +331,7 @@ double ETmodel::log_likelihood() const
         double var;
         for(size_t i=0; i<N; i++)
         {
-            var = etsig[i]*etsig[i];
+            var = etsig[i]*etsig[i] + jit*jit;
 
             logL += - halflog2pi - 0.5*log(var)
                     - 0.5*(pow(et[i] - mu[i], 2)/var);
@@ -340,7 +357,7 @@ void ETmodel::print(std::ostream& out) const
     out.setf(ios::fixed,ios::floatfield);
     out.precision(8);
 
-    //out<<extra_sigma<<'\t';
+    out<<extra_sigma<<'\t';
 
 
     out.precision(24);
@@ -374,7 +391,7 @@ string ETmodel::description() const
     string desc;
     string sep = "   ";
 
-    //desc += "extra_sigma   ";
+    desc += "extra_sigma   ";
 
     if (ephemeris >= 1) desc += "ephem1" + sep;
     if (ephemeris >= 2) desc += "ephem2" + sep;
@@ -458,7 +475,7 @@ void ETmodel::save_setup() {
     fout << endl;
 
     fout << "[priors.general]" << endl;
-
+    fout << "Jprior: " << *Jprior << endl;
 
     if (ephemeris >= 1) fout << "ephem1_prior: " << *ephem1_prior << endl;
     if (ephemeris >= 2) fout << "ephem2_prior: " << *ephem2_prior << endl;
