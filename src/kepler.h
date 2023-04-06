@@ -96,5 +96,11 @@ namespace postKep
     double post_Newtonian(double K1, double f, double ecc, double w, double P, double M1, double M2, double R1);
 }
 
+namespace proper_motion_anomaly
+{
+    double tan_vel(double M0, double K1, double P1, double e1, double nu1);
+    double get_M1(double M0, double K1, double P1);
+    double semi_amp(double M0, double M1, double P1);
+}
 
 

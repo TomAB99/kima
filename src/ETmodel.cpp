@@ -3,6 +3,7 @@
 using namespace std;
 using namespace Eigen;
 using namespace DNest4;
+using namespace proper_motion_anomaly;
 
 #define TIMING false
 
@@ -150,6 +151,12 @@ void ETmodel::calculate_mu()
             // f = brandt::true_anomaly(ti, P, ecc, Tp);
             tau = K/(24*3600) * ((1-pow(ecc,2.))/(1+ecc*cos(f)) * sin(f + omega) + ecc * sin(omega))/(pow(1 - pow(ecc*cos(omega),2.0),0.5));
             mu[i] += tau;
+        }
+        
+        if (PmA==true && j==0){
+            Tp = data.M0_epoch - (P * phi) / (2. * M_PI);
+            f = nijenhuis::true_anomaly(pma_bjd, P, ecc, Tp);
+            pma_mod = proper_motion_anomaly::tan_vel(star_mass,K,P,ecc,f);
         }
     }
 
@@ -337,6 +344,11 @@ double ETmodel::log_likelihood() const
                     - 0.5*(pow(et[i] - mu[i], 2)/var);
         }
     }
+    
+    if (PmA){
+        logL += - halflog2pi - 0.5*log(pma_err)
+                    - 0.5*(pow(pma - pma_mod, 2)/pma_err);
+    }
 
     #if TIMING
     auto end = std::chrono::high_resolution_clock::now();
@@ -382,6 +394,8 @@ void ETmodel::print(std::ostream& out) const
 
     if (studentt)
         out << '\t' << nu << '\t';
+        
+    out << '\t' << pma_mod <<'\t';
 
 }
 
@@ -428,6 +442,7 @@ string ETmodel::description() const
     desc += "staleness" + sep;
     if (studentt)
         desc += "nu" + sep;
+    desc += "tanvel" + sep;
 
     return desc;
 }

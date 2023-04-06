@@ -29,6 +29,9 @@ extern const bool studentt;
 ///type of ephemeris
 extern const int ephemeris;
 
+///is there a PmA measurement being used
+extern const bool PmA;
+
 class ETmodel
 {
     private:
@@ -43,6 +46,7 @@ class ETmodel
         double ephem1, ephem2=0.0, ephem3=0.0;
         double nu;
         double extra_sigma;
+        double pma_mod=0;
 
         // Parameters for the known object, if set
         // double KO_P, KO_K, KO_e, KO_phi, KO_w;
@@ -62,6 +66,10 @@ class ETmodel
         bool enforce_stability = false;
         
         double star_mass = 1.0;  // [Msun]
+        
+        double pma = 0.0; //m/s
+        double pma_err = 0.0; //m/s
+        double pma_bjd = 0.0; //bjd
 
         unsigned int staleness;
 

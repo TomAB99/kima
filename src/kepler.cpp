@@ -174,6 +174,54 @@ namespace murison
 
 } // namespace murison
 
+namespace proper_motion_anomaly
+{
+    double c_light = 299792458; //m/s
+    double G = 6.6743*pow(10,-11.0);
+    double M_sun = 1.988409870698051*pow(10,30.0);
+    double day_to_sec = 24*3600;
+    
+    double semi_amp(double M0, double M1, double P1)
+    {
+        return M1/(M0+M1)/c_light*pow(G*(M0+M1)*M_sun/4/M_PI/M_PI,1.0/3)*pow(P1*day_to_sec,2.0/3);
+    }
+    
+    double get_M1(double M0, double K1, double P1)
+    {
+        double m0 = 0;
+        double m1 = M0;
+        double k1 = semi_amp(M0, m1, P1);
+        
+        while (K1 > k1){
+            m0 = m1;
+            m1 = m0*2;
+            k1 = semi_amp(M0, m1, P1);
+        }
+        
+        double m2 = (m1+m0)/2;
+        double k2 = semi_amp(M0, m2, P1);
+        
+        while(abs(k2-K1)>0.01){
+            if (K1<k2){
+                m1 = m2;
+            } else {
+                m0 = m2;
+            }
+            m2 = (m1+m0)/2;
+            k2 = semi_amp(M0, m2, P1);
+        }
+        
+        return m2;
+    }
+    
+    double tan_vel(double M0, double K1, double P1, double e1, double nu1){
+        if (K1<0) K1 = 0.;
+        double M1 = get_M1(M0, K1, P1);
+        double atot = pow(pow(P1*day_to_sec,2.0)*G*(M0+M1)*M_sun/4/M_PI/M_PI,1.0/3);
+        double a1 = atot*M0/(M0+M1);
+        return M1/M0*pow(G*(M0+M1)*M_sun,0.5)*pow(2*(1+e1*cos(nu1))/a1/(1-pow(e1,2.0)) - 1/a1,0.5);
+    }
+}
 
 namespace postKep
 {
