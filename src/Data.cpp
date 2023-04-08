@@ -744,7 +744,7 @@ void ETData::load(const string filename, int skip)
 
     for (size_t n = 0; n < data.size(); n++) {
         if (n < skip) continue;
-        epochs.push_back(data[n][0]);
+        epochs.push_back(data[n][0] - data[skip][0]); // make sure the epochs start at 0
         et.push_back(data[n][1]);
         etsig.push_back(data[n][2]);
         if (ncol > 3) {
