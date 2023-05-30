@@ -1208,7 +1208,7 @@ double RV_binaries_model::perturb(RNG& rng)
                 }
                 if (double_lined){
                     for(unsigned j=0; j<offsets.size(); j++){
-                        individual_offset_prior[j]->perturb(offsets[j], rng);
+                        individual_offset_prior[j]->perturb(offsets_2[j], rng);
                     }
                 }
             }
@@ -1454,9 +1454,11 @@ void RV_binaries_model::print(std::ostream& out) const
         }
     }
     else
+    {
         out<<extra_sigma<<'\t';
         if (double_lined)
             out<<extra_sigma_2<<'\t';
+    }
 
     if(trend)
     {
@@ -1542,9 +1544,11 @@ string RV_binaries_model::description() const
         }
     }
     else
+    {
         desc += "extra_sigma   ";
         if (double_lined)
             desc += "extra_sigma_sec   ";
+    }
 
     if(trend)
     {
